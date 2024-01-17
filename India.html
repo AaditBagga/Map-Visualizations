@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+    <meta charset="utf8">
+    <meta name="viewport" content="device-width",initial-scale="1.0">
+    <title>India Friends Location </title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        svg {
+            display:block; 
+            margin-left: auto; 
+            margin-right: auto; 
+        }
+    </style>
+</head>
+<body>
+    <svg id="map" width="1000" height="1000" ></svg>
+    <script>
+        const svg = d3.select("#map");
+
+        const locations = [
+              {name: "Ameesha", coordinates: [77.2090, 28.6139]},
+              {name: "Hrishikesh", coordinates: [72.8825, 19.0880]},
+              {name: "Mayura", coordinates: [73.8505, 18.5336]},
+              {name: "Rakesh", coordinates: [81.8427, 16.7633]},
+              {name: "Vaishnav", coordinates: [78.5075, 17.3972]},
+              {name: "Aadit", coordinates: [73.8624, 18.5034 ]},
+              {name: "Supriya", coordinates: [74.8620,32.7238]},
+              {name: "Priyanka", coordinates: [75.8610,22.7314]},
+              {name: "Het", coordinates: [76.7731, 30.7368]},
+              {name: "Maria", coordinates: [79.0882, 21.1482]}
+              
+            ];
+
+        d3.json("india-osm.geojson").then((indiaGeoJson) => {
+            const projection = d3.geoEquirectangular()
+                           .fitSize([svg.attr("width"), svg.attr("height")], indiaGeoJson);
+
+            const path = d3.geoPath()
+                     .projection(projection);
+
+            svg.selectAll("path")
+               .data(indiaGeoJson.features)
+               .enter()
+               .append("path")
+               .attr("d", path)
+               .attr("fill", "#ADD8E6")
+               .attr("stroke", "#ff0000")
+               .attr("stroke-width", 2);
+
+            svg.selectAll("circle")
+               .data(locations)
+               .enter()
+               .append("circle")
+               .attr("cx", d => projection(d.coordinates)[0])
+               .attr("cy", d => projection(d.coordinates)[1])
+               .attr("r", 4)
+               .attr("fill", "orange");
+
+            var labels = svg.selectAll("text")
+                            .data(locations)
+                            .enter()
+                            .append("text")
+                            .attr("x", function(d) { return projection(d.coordinates)[0] + 10; })
+                            .attr("y", function(d) { return projection(d.coordinates)[1] + 5; })
+                            .text(function(d) { return d.name; })
+                            .style("font-size", "18px")
+                            .style("fill", "black");
+
+            
+        }).catch((error) => {
+            console.error("Error loading the GeoJSON file:", error);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+    <meta charset="utf8">
+    <meta name="viewport" content="device-width",initial-scale="1.0">
+    <title>North Carolina Map </title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        svg {
+            display:block; 
+            margin-left: auto; 
+            margin-right: auto; 
+        }
+    </style>
+</head>
+<body>
+    <svg id="map" width="1000" height="1000" ></svg>
+    <script>
+        const svg = d3.select("#map");
+
+
+        d3.json("nc.geojson").then((NCGeoJson) => {
+            const projection = d3.geoEquirectangular()
+                           .fitSize([svg.attr("width"), svg.attr("height")], NCGeoJson);
+
+            const path = d3.geoPath()
+                     .projection(projection);
+
+            svg.selectAll("path")
+               .data(NCGeoJson.features)
+               .enter()
+               .append("path")
+               .attr("d", path)
+               .attr("fill", "#00ff00")
+               .attr("stroke", "#ff0000")
+               .attr("stroke-width", 2);
+
+            
+        }).catch((error) => {
+            console.error("Error loading the GeoJSON file:", error);
+        });
+    </script>
+</body>
+</html>
+
+
