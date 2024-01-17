@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>US Population Map</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      .map {
+        stroke: green;
+        stroke-width: 1;
+      }
+      .tooltip {
+        position: absolute;
+      
+        padding: 10px;
+        background-color: white;
+        border: 1px solid black;
+        opacity: 0;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <h3>Color 1:</h3>
+    <svg
+      id="svgArea1"
+      height="600"
+      width="1000"
+      style="background-color: gray; margin-left: 40px; padding-left: 60px; padding-top: 60px;"
+    ></svg>
+    <h3>Color 2:</h3>
+    <svg
+      id="svgArea2"
+      height="600"
+      width="1000"
+      style="background-color: gray; margin-left: 40px; padding-left: 60px; padding-top: 60px;"
+    ></svg>
+    <h3>Color 3:</h3>
+    <svg
+      id="svgArea3"
+      height="600"
+      width="1000"
+      style="background-color: gray; margin-left: 40px; padding-left: 60px; padding-top: 60px;"
+    ></svg>
+    
+    <div class="tooltip"></div>
+    <script>
+      const tooltip = d3.select(".tooltip");
+
+      const usMapPromise = d3.json("us-states2.json");
+      const populationPromise = d3.csv("us_population_by_state_2019.csv");
+
+      Promise.all([usMapPromise, populationPromise])
+        .then(([usdata, populationData]) => {
+          const us_population_data = new Map(
+            populationData.map((d) => [d.area, +d.population])
+          );
+
+          const projection = d3.geoMercator().fitSize([950, 550], usdata);
+          const path = d3.geoPath().projection(projection);
+
+          const myColors = [
+            d3.scaleSequential()
+              .domain([1, 30000000])
+              .interpolator(d3.interpolateBlues),
+            d3.scaleSequential()
+              .domain([1, 30000000])
+              .interpolator(d3.interpolateReds),
+            d3.scaleSequential()
+              .domain([1, 30000000])
+              .interpolator(d3.interpolateRainbow),
+          ];
+
+          const svgAreas = [d3.select("#svgArea1"), d3.select("#svgArea2"), d3.select("#svgArea3")];
+
+          svgAreas.forEach((svg, i) => {
+            const map = svg
+              .append("g")
+              .attr("class", "map")
+              .selectAll("path")
+              .data(usdata.features)
+              .join("path")
+              .attr("d", path)
+              .style("fill", (d) => myColors[i](us_population_data.get(d.properties.NAME)))
+              .on("mousemove", (event, d) => {
+                tooltip
+                  .html(`${d.properties.NAME}: ${us_population_data.get(d.properties.NAME)}`)
+                  .style("opacity", 1)
+                  .style("left", `${event.pageX + 10}px`)
+                  .style("top", `${event.pageY - 25}px`);
+              })
+              .on("mouseout", () => tooltip.style("opacity", 0));
+          });
+        })
+        .catch((error) => {
+          console.error("Error in loading the data: ", error);
+        });
+    </script>
+  </body>
+</html>
